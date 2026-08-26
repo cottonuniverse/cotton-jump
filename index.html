@@ -73,7 +73,16 @@ let running = false, keys = {}, frame = 0, masaMula = 0, timerId = null;
 
 const heroImg = new Image();
 let heroReady = false;
-heroImg.onload = ()=>{ heroReady = true; };
+let heroSprite = null;      // versi kecil siap-skala (elak kecilkan gambar besar setiap frame)
+const HERO_H = 80;
+heroImg.onload = ()=>{
+  const w = Math.round(HERO_H * (heroImg.width/heroImg.height));
+  const off = document.createElement('canvas');
+  off.width = w; off.height = HERO_H;
+  off.getContext('2d').drawImage(heroImg, 0, 0, w, HERO_H);
+  heroSprite = off;
+  heroReady = true;
+};
 heroImg.src = 'cotton-rider.png';
 
 let particles = [], popups = [];
@@ -337,10 +346,10 @@ function lukis(L){
   // percikan
   particles.forEach(p=>{ ctx.globalAlpha=Math.max(0,p.life); ctx.fillStyle=p.warna; ctx.fillRect(p.x,p.y,4,4); });
   ctx.globalAlpha=1;
-  if(heroReady){
-    // lukis Cotton Rider dengan animasi ringan
+  if(heroReady && heroSprite){
+    // lukis Cotton Rider (sprite siap-skala) dengan animasi ringan
     const bob = player.diTanah ? Math.abs(Math.sin(frame/6))*2 : 0;
-    const dh = 80 - bob, dw = 80 * (heroImg.width/heroImg.height);
+    const dw = heroSprite.width, dh = heroSprite.height - bob;
     const dx = player.x + player.w/2 - dw/2;
     const dy = (player.y + player.h) - dh;
     const kiri = player.vx < 0;
@@ -348,8 +357,8 @@ function lukis(L){
     ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath();
     ctx.ellipse(player.x+player.w/2, L.groundY-2, 20, 5, 0, 0, 7); ctx.fill();
     ctx.save();
-    if(kiri){ ctx.translate(dx+dw,dy); ctx.scale(-1,1); ctx.drawImage(heroImg,0,0,dw,dh); }
-    else { ctx.drawImage(heroImg,dx,dy,dw,dh); }
+    if(kiri){ ctx.translate(dx+dw,dy); ctx.scale(-1,1); ctx.drawImage(heroSprite,0,0,dw,dh); }
+    else { ctx.drawImage(heroSprite,dx,dy,dw,dh); }
     ctx.restore();
   } else {
     ctx.fillStyle='#ff69b4'; ctx.fillRect(player.x,player.y,32,20);
